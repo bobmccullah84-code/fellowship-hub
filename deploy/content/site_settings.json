@@ -1,0 +1,33 @@
+[
+  {
+    "id": "9ed7c700-92ea-4507-870e-087a75d8d96e",
+    "site_name": "Fellowship Hub",
+    "site_tagline": "Resources for Spiritual Growth",
+    "contact_email": "contact@fellowshiphub.com",
+    "contact_phone": "",
+    "address": "",
+    "hero_title": "For Serious Followers of Christ",
+    "hero_subtitle": "Welcome to Fellowship Hub",
+    "features_title": "Resources for Spiritual Growth",
+    "features_subtitle": "Everything you need to grow in your faith",
+    "typography": {
+      "bodyTextSize": "base",
+      "cardTitleSize": "lg",
+      "heroTitleSize": "3xl",
+      "heroSubtitleSize": "xl",
+      "sectionTitleSize": "2xl"
+    },
+    "layout": {
+      "cardSize": "normal",
+      "cardsPerRow": 3,
+      "sectionSpacing": "normal",
+      "maxContentWidth": "7xl"
+    },
+    "colors": {
+      "accent": "hsl(340, 70%, 50%)",
+      "primary": "hsl(220, 70%, 50%)",
+      "secondary": "hsl(280, 70%, 50%)"
+    },
+    "updated_at": "2025-09-30T05:35:50.175Z"
+  }
+]

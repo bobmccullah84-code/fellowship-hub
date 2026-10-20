@@ -1,0 +1,22 @@
+[
+  {
+    "id": "e147d202-05e5-48bd-9d3e-7d79511cce9b",
+    "title": "Foundations of Faith",
+    "description": "A comprehensive journey through the essential principles of Christian faith, designed to strengthen your relationship with God and equip you for spiritual growth.",
+    "thumbnail_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    "total_lessons": 5,
+    "is_public": true,
+    "created_at": "2025-09-28T15:39:23.557Z",
+    "updated_at": "2025-09-28T15:39:23.557Z"
+  },
+  {
+    "id": "bfc98df7-d5af-4da8-8960-947854a87807",
+    "title": "Prayer and Worship",
+    "description": "Learn the fundamentals of prayer and worship in your daily Christian walk.",
+    "thumbnail_url": "https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    "total_lessons": 4,
+    "is_public": true,
+    "created_at": "2025-09-28T15:39:23.557Z",
+    "updated_at": "2025-09-28T15:39:23.557Z"
+  }
+]
