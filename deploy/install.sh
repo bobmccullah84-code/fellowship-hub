@@ -174,6 +174,64 @@ if command -v ufw >/dev/null && ufw status | grep -q active; then
   ufw allow 'Nginx Full' || true
 fi
 
+say "Setting up voice relay (TURN) for voice channels"
+# Lets voice chat connect for people behind strict networks (mobile carriers, offices).
+if [ "$OS_FAMILY" = debian ]; then
+  TURN_CONF=/etc/turnserver.conf
+  HAD_COTURN=$(dpkg -s coturn >/dev/null 2>&1 && echo yes || echo no)
+  apt-get install -y coturn
+  sed -i 's/^#\?TURNSERVER_ENABLED=.*/TURNSERVER_ENABLED=1/' /etc/default/coturn 2>/dev/null || true
+else
+  TURN_CONF=/etc/coturn/turnserver.conf
+  HAD_COTURN=$(rpm -q coturn >/dev/null 2>&1 && echo yes || echo no)
+  dnf install -y coturn
+fi
+if [ "$HAD_COTURN" = yes ] && [ -f "$TURN_CONF" ] && ! grep -q "managed by fellowship-hub" "$TURN_CONF"; then
+  echo "coturn was already configured on this server for something else; leaving it alone (voice will use STUN only)."
+else
+  grep -q '^TURN_SECRET=' "$ENV_FILE" || echo "TURN_SECRET=$(openssl rand -hex 32)" >> "$ENV_FILE"
+  if grep -q '^TURN_HOST=' "$ENV_FILE"; then sed -i "s/^TURN_HOST=.*/TURN_HOST=$DOMAIN/" "$ENV_FILE"; else echo "TURN_HOST=$DOMAIN" >> "$ENV_FILE"; fi
+  TURN_SECRET_VALUE=$(grep '^TURN_SECRET=' "$ENV_FILE" | cut -d= -f2-)
+  PUBLIC_IP=$(curl -fsS https://api.ipify.org 2>/dev/null || hostname -I | awk '{print $1}')
+  mkdir -p "$(dirname "$TURN_CONF")"
+  cat > "$TURN_CONF" <<TURN
+# managed by fellowship-hub installer
+listening-port=3478
+fingerprint
+use-auth-secret
+static-auth-secret=$TURN_SECRET_VALUE
+realm=$DOMAIN
+external-ip=$PUBLIC_IP
+min-port=49160
+max-port=49200
+no-cli
+no-tls
+no-dtls
+no-multicast-peers
+total-quota=200
+# never relay into private or local networks
+denied-peer-ip=0.0.0.0-0.255.255.255
+denied-peer-ip=10.0.0.0-10.255.255.255
+denied-peer-ip=100.64.0.0-100.127.255.255
+denied-peer-ip=127.0.0.0-127.255.255.255
+denied-peer-ip=169.254.0.0-169.254.255.255
+denied-peer-ip=172.16.0.0-172.31.255.255
+denied-peer-ip=192.168.0.0-192.168.255.255
+denied-peer-ip=::1
+denied-peer-ip=fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+denied-peer-ip=fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+TURN
+  systemctl enable coturn
+  systemctl restart coturn
+  if [ "$OS_FAMILY" = rhel ] && systemctl is-active --quiet firewalld; then
+    firewall-cmd --permanent --add-port=3478/udp --add-port=3478/tcp --add-port=49160-49200/udp && firewall-cmd --reload
+  fi
+  if command -v ufw >/dev/null && ufw status | grep -q active; then
+    ufw allow 3478/udp; ufw allow 3478/tcp; ufw allow 49160:49200/udp
+  fi
+  systemctl restart $APP_NAME
+fi
+
 say "Requesting HTTPS certificate"
 if [ -n "$CERT_EMAIL" ]; then CERT_ARGS=(-m "$CERT_EMAIL"); else CERT_ARGS=(--register-unsafely-without-email); fi
 if certbot --nginx -n --agree-tos --redirect "${CERT_ARGS[@]}" -d "$DOMAIN"; then

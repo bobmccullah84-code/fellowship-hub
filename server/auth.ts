@@ -36,6 +36,9 @@ export function publicUser(u: any) {
   return rest;
 }
 
+/** Session middleware, shared with the WebSocket server so voice chat knows who is connected. */
+export let sessionMiddleware: ReturnType<typeof session> | null = null;
+
 export function setupAuth(app: Express) {
   // Validate required environment variables
   const sessionSecret = process.env.SESSION_SECRET;
@@ -67,7 +70,8 @@ export function setupAuth(app: Express) {
   };
 
   app.set("trust proxy", 1);
-  app.use(session(sessionSettings));
+  sessionMiddleware = session(sessionSettings);
+  app.use(sessionMiddleware);
   app.use(passport.initialize());
   app.use(passport.session());
 

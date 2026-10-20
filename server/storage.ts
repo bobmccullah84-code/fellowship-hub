@@ -349,10 +349,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async joinVoiceChannel(channelId: string, userId: string): Promise<void> {
-    await db
-      .insert(voiceParticipants)
-      .values({ channelId, userId })
-      .onConflictDoNothing();
+    // A user can only be in one voice channel at a time
+    await db.delete(voiceParticipants).where(eq(voiceParticipants.userId, userId));
+    await db.insert(voiceParticipants).values({ channelId, userId });
   }
 
   async leaveVoiceChannel(channelId: string, userId: string): Promise<void> {

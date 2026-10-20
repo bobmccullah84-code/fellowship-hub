@@ -7,6 +7,7 @@ import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { setupAuth, publicUser } from "./auth";
+import { attachVoice, iceServersFor } from "./voice";
 import { 
   insertUserSchema,
   insertTeachingSchema,
@@ -211,6 +212,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error creating message:", error);
       res.status(500).json({ message: "Failed to send message" });
     }
+  });
+
+  // ICE servers (STUN/TURN) for voice chat connections
+  app.get("/api/voice/ice-servers", requireAuth, (req: any, res) => {
+    res.json({ iceServers: iceServersFor(req.user.id) });
   });
 
   // Join voice channel
@@ -952,8 +958,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   const connectedClients = new Set<WebSocket>();
 
-  wss.on('connection', (ws: WebSocket) => {
+  wss.on('connection', (ws: WebSocket, req) => {
     connectedClients.add(ws);
+    void attachVoice(ws, req, broadcastMessage);
     console.log('WebSocket client connected');
 
     ws.on('close', () => {

@@ -46,3 +46,13 @@ Upload the new bundle, unpack it, and re-run `bash deploy/install.sh`. Content i
 | Settings / secrets | `/etc/fellowship-hub.env` |
 | Reset an admin password | `cd /opt/fellowship-hub && set -a && . /etc/fellowship-hub.env && sudo -u fellowship -E npx tsx script/create-admin.ts EMAIL NEWPASSWORD` |
 | Database backup | `sudo -u postgres pg_dump fellowship > backup.sql` |
+
+## Voice channels
+
+Voice channels carry live audio. Each browser sends audio directly to the others (WebRTC), and the site's WebSocket only introduces them to each other. The installer also sets up a TURN relay (coturn on port 3478, UDP relay ports 49160–49200) so people behind strict networks can still connect.
+
+- Each room works well for up to ~8–10 people speaking at once; default rooms are capped at 10.
+- Mute and moderator-mute silence the microphone itself. Moderators are the channel's creator/moderator and site admins.
+- The browser must allow microphone access. If it's blocked, the user can still listen.
+- Manage rooms in the admin page; "Fellowship Lounge" and "Prayer Room" are created automatically.
+- If voice fails for some users, check that ports 3478 (UDP/TCP) and 49160–49200 (UDP) are open in hPanel → VPS → Firewall, and `systemctl status coturn`.

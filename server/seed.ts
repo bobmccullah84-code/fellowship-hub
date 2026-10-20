@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { teachings, courses, lessons, projects } from "@shared/schema";
+import { teachings, courses, lessons, projects, voiceChannels, voiceParticipants, users } from "@shared/schema";
 import { count, eq } from "drizzle-orm";
 import { log } from "./vite";
 
@@ -20,6 +20,7 @@ export async function seedDatabase() {
     }
 
     await applyCorrections();
+    await seedVoiceChannels();
   } catch (err) {
     log(`Seed error: ${err}`);
   }
@@ -334,4 +335,34 @@ async function seedProjects() {
     },
   ]);
   log("Projects seeded.");
+}
+
+async function seedVoiceChannels() {
+  // Nobody is connected right after a restart
+  await db.delete(voiceParticipants);
+
+  const [channelCount] = await db.select({ count: count() }).from(voiceChannels);
+  if (Number(channelCount.count) > 0) return;
+  const [admin] = await db.select({ id: users.id }).from(users).where(eq(users.isAdmin, true)).limit(1);
+  if (!admin) return; // created on a later start, once an admin account exists
+
+  log("Seeding voice channels...");
+  await db.insert(voiceChannels).values([
+    {
+      name: "Fellowship Lounge",
+      description: "Open conversation and encouragement",
+      isActive: true,
+      maxParticipants: 10,
+      createdBy: admin.id,
+      moderatorId: admin.id,
+    },
+    {
+      name: "Prayer Room",
+      description: "Pray together",
+      isActive: true,
+      maxParticipants: 10,
+      createdBy: admin.id,
+      moderatorId: admin.id,
+    },
+  ]);
 }

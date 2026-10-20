@@ -7,13 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useVoiceRoom } from "@/hooks/use-voice-room";
 import { 
   Mic, 
   MicOff, 
   Volume2,
   User,
   Crown,
-  Hash
+  Hash,
+  Loader2,
+  AlertTriangle
 } from "lucide-react";
 import type { VoiceChannel } from "@shared/schema";
 
@@ -47,6 +50,18 @@ export default function VoiceChannels() {
   const currentUserParticipant = joinedChannel?.participants.find(p => p.userId === user?.id);
   const isUserMuted = currentUserParticipant?.isMuted || currentUserParticipant?.isMutedByModerator || false;
   const isModerator = user && joinedChannel && (joinedChannel.moderatorId === user.id || joinedChannel.createdBy === user.id || user.isAdmin);
+
+  // Live audio for the joined channel
+  const voice = useVoiceRoom({
+    channelId: joinedChannelId,
+    userId: user?.id,
+    muted: isUserMuted,
+    onDisconnected: (reason) => {
+      setJoinedChannelId(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/voice-channels"] });
+      toast({ title: "Left voice channel", description: reason, variant: "destructive" });
+    },
+  });
 
   // Join channel mutation
   const joinChannelMutation = useMutation({
@@ -228,7 +243,7 @@ export default function VoiceChannels() {
                       >
                         <div className="flex items-center space-x-3 flex-1">
                           {/* Avatar */}
-                          <div className={`w-8 h-8 rounded-full ${getAvatarColor(participant.userId)} flex items-center justify-center text-white font-semibold text-sm`}>
+                          <div className={`w-8 h-8 rounded-full ${getAvatarColor(participant.userId)} flex items-center justify-center text-white font-semibold text-sm transition-shadow ${isJoined && voice.speaking.has(participant.userId) && !isMuted ? 'ring-2 ring-green-400 ring-offset-2 ring-offset-gray-900' : ''}`}>
                             {participant.firstName[0]}{participant.lastName[0]}
                           </div>
                           
@@ -299,6 +314,23 @@ export default function VoiceChannels() {
                   </div>
                   {currentUserParticipant?.isMutedByModerator && (
                     <p className="text-xs text-red-400 mt-2">You have been muted by a moderator</p>
+                  )}
+                  <div className="mt-2 text-xs" data-testid="voice-status">
+                    {voice.status === "connecting" && (
+                      <span className="flex items-center text-gray-400"><Loader2 className="h-3 w-3 mr-1 animate-spin" />Connecting audio…</span>
+                    )}
+                    {voice.status === "connected" && (
+                      <span className="text-green-400">
+                        Voice connected{channel.participants.length > 1 ? ` · hearing ${voice.connectedPeers.length} of ${channel.participants.length - 1}` : " · waiting for others to join"}
+                      </span>
+                    )}
+                    {voice.status === "error" && <span className="text-red-400">Voice connection problem</span>}
+                  </div>
+                  {!voice.micAvailable && (
+                    <p className="flex items-start text-xs text-yellow-400 mt-2">
+                      <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 shrink-0" />
+                      Microphone blocked — you can listen but others can't hear you. Allow microphone access in your browser's address bar, then leave and rejoin.
+                    </p>
                   )}
                 </div>
               )}
