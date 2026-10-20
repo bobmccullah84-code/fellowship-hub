@@ -26,17 +26,42 @@ say() { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 [ "$(id -u)" = 0 ] || { echo "Run as root"; exit 1; }
 
 say "Installing system packages (Node.js 22, PostgreSQL, nginx, certbot)"
-export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y ca-certificates curl gnupg rsync postgresql nginx certbot python3-certbot-nginx
-if ! command -v node >/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 20 ]; then
-  curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-  apt-get install -y nodejs
+if command -v apt-get >/dev/null; then
+  OS_FAMILY=debian
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -y
+  apt-get install -y ca-certificates curl gnupg rsync git openssl postgresql nginx certbot python3-certbot-nginx
+  if ! command -v node >/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 20 ]; then
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    apt-get install -y nodejs
+  fi
+  NOLOGIN=/usr/sbin/nologin
+elif command -v dnf >/dev/null; then
+  # AlmaLinux / Rocky / RHEL 9
+  OS_FAMILY=rhel
+  dnf install -y epel-release
+  dnf module reset -y postgresql || true
+  dnf module enable -y postgresql:16 || true
+  dnf install -y curl rsync git openssl tar postgresql-server postgresql nginx certbot python3-certbot-nginx policycoreutils-python-utils
+  if ! command -v node >/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 20 ]; then
+    curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+    dnf install -y nodejs
+  fi
+  if [ ! -f /var/lib/pgsql/data/PG_VERSION ]; then
+    postgresql-setup --initdb
+  fi
+  # RHEL defaults local TCP logins to "ident"; the app logs in with a password
+  sed -ri 's/^(host\s+all\s+all\s+(127\.0\.0\.1\/32|::1\/128)\s+)ident/\1scram-sha-256/' /var/lib/pgsql/data/pg_hba.conf
+  grep -q "^password_encryption" /var/lib/pgsql/data/postgresql.conf || echo "password_encryption = scram-sha-256" >> /var/lib/pgsql/data/postgresql.conf
+  systemctl restart postgresql || true
+  NOLOGIN=/sbin/nologin
+else
+  echo "Unsupported OS (need apt or dnf)"; exit 1
 fi
 systemctl enable --now postgresql nginx
 
 say "Creating app user and folders"
-id -u $APP_USER >/dev/null 2>&1 || useradd --system --create-home --shell /usr/sbin/nologin $APP_USER
+id -u $APP_USER >/dev/null 2>&1 || useradd --system --create-home --shell $NOLOGIN $APP_USER
 mkdir -p "$APP_DIR" "$DATA_DIR/uploads"
 
 say "Setting up database and secrets"
@@ -113,7 +138,8 @@ systemctl enable $APP_NAME
 systemctl restart $APP_NAME
 
 say "Configuring nginx for $DOMAIN"
-cat > /etc/nginx/sites-available/$APP_NAME <<NGINX
+if [ "$OS_FAMILY" = debian ]; then NGINX_CONF=/etc/nginx/sites-available/$APP_NAME; else NGINX_CONF=/etc/nginx/conf.d/$APP_NAME.conf; fi
+cat > "$NGINX_CONF" <<NGINX
 server {
     listen 80;
     server_name $DOMAIN;
@@ -132,8 +158,16 @@ server {
     }
 }
 NGINX
-ln -sf /etc/nginx/sites-available/$APP_NAME /etc/nginx/sites-enabled/$APP_NAME
-rm -f /etc/nginx/sites-enabled/default
+if [ "$OS_FAMILY" = debian ]; then
+  ln -sf /etc/nginx/sites-available/$APP_NAME /etc/nginx/sites-enabled/$APP_NAME
+  rm -f /etc/nginx/sites-enabled/default
+else
+  # let nginx proxy to the app under SELinux, and open the firewall
+  command -v setsebool >/dev/null && setsebool -P httpd_can_network_connect 1 || true
+  if systemctl is-active --quiet firewalld; then
+    firewall-cmd --permanent --add-service=http --add-service=https && firewall-cmd --reload
+  fi
+fi
 nginx -t && systemctl reload nginx
 
 if command -v ufw >/dev/null && ufw status | grep -q active; then

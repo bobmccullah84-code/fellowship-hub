@@ -12,7 +12,7 @@ User accounts, messages and prayer requests weren't in the Replit export, so eve
 
 ## First install
 
-1. In hPanel → VPS, pick **Ubuntu 24.04** (plain OS, no panel) and note the server **IP** and **hostname** (looks like `srv123456.hstgr.cloud`).
+1. In hPanel → VPS, use Ubuntu 22.04/24.04 or AlmaLinux 9 (the installer handles both) and note the server **IP** and **hostname** (looks like `srv123456.hstgr.cloud`).
 2. From your computer (Windows PowerShell, Mac or Linux terminal):
 
    ```
