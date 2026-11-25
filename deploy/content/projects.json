@@ -1,5 +1,24 @@
 [
   {
+    "id": "5582a2fe-a314-4882-b7cc-eb2e570a13c6",
+    "title": "Zambia School: D1018 Foundation",
+    "description": "The D1018 Foundation (Deuteronomy Ten Eighteen Foundation) runs a free Christian school and feeding program for children in Foxdale, Lusaka, Zambia. In townships like Kasisi and Ng'ombe, many children start Grade 1 without any early childhood education, which leads to high illiteracy. D1018 reaches children under five with early learning, helps children and teens grow through reading, provides nutritious meals, and teaches them about Jesus Christ. Founded in August 2023, the school has moved from Ng'ombe to a larger site in Foxdale so it can serve more children. Partners such as The Generation Zm donate school supplies, and visitors from the US Peace Corps have toured the project. Your support provides free, quality education, school supplies and meals. Contact: +260 772 790 524.",
+    "category": "children",
+    "image_url": "/public-objects/d1018-foundation-logo.jpg",
+    "goal": null,
+    "raised": 0,
+    "volunteers_needed": null,
+    "volunteers_signed_up": 0,
+    "status": "active",
+    "start_date": "2023-08-16T00:00:00.000Z",
+    "end_date": null,
+    "contact_person": "D1018 Foundation",
+    "contact_email": "d1018foundation@gmail.com",
+    "is_public": true,
+    "created_at": "2026-11-25T02:56:00.000Z",
+    "updated_at": "2026-11-25T02:56:00.000Z"
+  },
+  {
     "id": "46f86020-f8b9-4400-a53f-93f53d0ce27c",
     "title": "Community Feeding Program",
     "description": "Weekly meals served to families experiencing food insecurity. We provide nutritious, home-cooked meals every Saturday afternoon at the community center. Join us in fighting hunger!",
