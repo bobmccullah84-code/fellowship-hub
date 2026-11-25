@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { AdminProjects } from "@/components/admin-projects";
+import { FolderHeart } from "lucide-react";
 import { 
   Users, 
   Video, 
@@ -223,7 +225,7 @@ export default function AdminPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 h-auto">
             <TabsTrigger value="users" data-testid="tab-users">
               <Users className="mr-2 h-4 w-4" />
               Users
@@ -240,6 +242,10 @@ export default function AdminPage() {
               <Mic className="mr-2 h-4 w-4" />
               Channels
             </TabsTrigger>
+            <TabsTrigger value="projects" data-testid="tab-projects">
+              <FolderHeart className="mr-2 h-4 w-4" />
+              Projects
+            </TabsTrigger>
             <TabsTrigger value="prayers" data-testid="tab-prayers">
               <Heart className="mr-2 h-4 w-4" />
               Prayers
@@ -249,6 +255,10 @@ export default function AdminPage() {
               Site Settings
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="projects" className="mt-6">
+            <AdminProjects />
+          </TabsContent>
 
           <TabsContent value="users" className="mt-6">
             <UsersManagement />

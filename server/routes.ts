@@ -1,3 +1,4 @@
+import { z } from "zod";
 import fs from "fs";
 import { ensureUploadsDir, resolvePublicObject, savePublicObject } from "./objectStorage";
 import type { Express } from "express";
@@ -912,6 +913,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating project:", error);
       res.status(500).json({ message: "Failed to update project" });
+    }
+  });
+
+  // Update a project's funding goal, period (one-time / monthly) and amount raised
+  app.patch("/api/admin/projects/:id/funding", requireAdmin, async (req, res) => {
+    const body = z
+      .object({
+        goal: z.number().int().min(0).nullable().optional(),
+        fundingPeriod: z.enum(["monthly"]).nullable().optional(),
+        raised: z.number().int().min(0).optional(),
+      })
+      .safeParse(req.body);
+    if (!body.success) {
+      return res.status(400).json({ message: "Validation failed", errors: body.error.errors });
+    }
+    try {
+      const project = await storage.updateProjectFunding(req.params.id, body.data);
+      if (!project) return res.status(404).json({ message: "Project not found" });
+      res.json(project);
+    } catch (error) {
+      console.error("Error updating project funding:", error);
+      res.status(500).json({ message: "Failed to update funding" });
     }
   });
 

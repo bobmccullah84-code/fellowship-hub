@@ -126,12 +126,21 @@ export interface IStorage {
   // Project management (admin)
   createProject(project: InsertProject): Promise<Project>;
   updateProject(id: string, updates: Partial<InsertProject>): Promise<Project>;
+  updateProjectFunding(id: string, funding: { goal?: number | null; fundingPeriod?: string | null; raised?: number }): Promise<Project | undefined>;
   deleteProject(id: string): Promise<void>;
   
   // Site settings operations
   getSiteSettings(): Promise<SiteSettings | undefined>;
   updateSiteSettings(updates: Partial<InsertSiteSettings>): Promise<SiteSettings>;
   initializeSiteSettings(): Promise<SiteSettings>;
+}
+
+/** "YYYY-MM" for the current month in US Central time. */
+export function currentFundingPeriod(date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago", year: "numeric", month: "2-digit" }).formatToParts(date);
+  const y = parts.find((p) => p.type === "year")!.value;
+  const m = parts.find((p) => p.type === "month")!.value;
+  return `${y}-${m}`;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -766,7 +775,32 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Project operations
+  /** Monthly goals start over each calendar month (US Central time). */
+  private async rollMonthlyFunding(): Promise<void> {
+    const period = currentFundingPeriod();
+    await db
+      .update(projects)
+      .set({ raised: 0, raisedPeriod: period })
+      .where(and(eq(projects.fundingPeriod, "monthly"), sql`${projects.raisedPeriod} IS DISTINCT FROM ${period}`));
+  }
+
+  async updateProjectFunding(
+    id: string,
+    funding: { goal?: number | null; fundingPeriod?: string | null; raised?: number },
+  ): Promise<Project | undefined> {
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    if (funding.goal !== undefined) updates.goal = funding.goal;
+    if (funding.fundingPeriod !== undefined) updates.fundingPeriod = funding.fundingPeriod;
+    if (funding.raised !== undefined) {
+      updates.raised = funding.raised;
+      updates.raisedPeriod = currentFundingPeriod();
+    }
+    const [project] = await db.update(projects).set(updates).where(eq(projects.id, id)).returning();
+    return project;
+  }
+
   async getProjects(): Promise<Project[]> {
+    await this.rollMonthlyFunding();
     return await db
       .select()
       .from(projects)
@@ -775,6 +809,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProject(id: string): Promise<Project | undefined> {
+    await this.rollMonthlyFunding();
     const [project] = await db
       .select()
       .from(projects)

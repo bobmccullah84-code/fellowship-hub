@@ -149,6 +149,9 @@ export const projects = pgTable("projects", {
   imageUrl: text("image_url"),
   goal: integer("goal"), // Financial goal if applicable
   raised: integer("raised").default(0), // Amount raised if applicable
+  fundingPeriod: text("funding_period"), // null = one-time goal, "monthly" = goal per calendar month
+  raisedPeriod: text("raised_period"), // "YYYY-MM" the raised amount belongs to (monthly goals)
+  images: jsonb("images").$type<string[]>().default([]), // photo gallery
   volunteersNeeded: integer("volunteers_needed"),
   volunteersSignedUp: integer("volunteers_signed_up").default(0),
   status: text("status").default("active"), // active, completed, paused
@@ -341,9 +344,12 @@ export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({
   updatedAt: true,
 });
 
-export const insertProjectSchema = createInsertSchema(projects).omit({
+export const insertProjectSchema = createInsertSchema(projects, {
+  images: z.array(z.string()).optional(),
+}).omit({
   id: true,
   raised: true,
+  raisedPeriod: true,
   volunteersSignedUp: true,
   createdAt: true,
   updatedAt: true,

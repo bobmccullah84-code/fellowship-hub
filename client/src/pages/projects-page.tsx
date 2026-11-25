@@ -21,6 +21,7 @@ import {
   Wrench
 } from "lucide-react";
 import type { Project } from "@shared/schema";
+import { ProjectGallery } from "@/components/project-gallery";
 
 export default function ProjectsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -55,6 +56,7 @@ export default function ProjectsPage() {
       month: "short",
       day: "numeric",
       year: "numeric",
+      timeZone: "UTC", // dates are stored as midnight UTC
     });
   };
 
@@ -124,23 +126,20 @@ export default function ProjectsPage() {
                 className="overflow-hidden hover:shadow-lg transition-shadow"
                 data-testid={`card-project-${project.id}`}
               >
-                {project.imageUrl && (
-                  <div className="relative aspect-video bg-muted">
-                    <img
-                      src={project.imageUrl}
-                      alt={project.title}
-                      className="w-full h-full object-cover"
-                    />
+                <ProjectGallery
+                  title={project.title}
+                  photos={projectPhotos(project)}
+                  overlay={
                     <div className="absolute top-3 right-3">
-                      <Badge 
+                      <Badge
                         variant={project.status === "active" ? "default" : "secondary"}
                         data-testid={`badge-status-${project.id}`}
                       >
                         {project.status}
                       </Badge>
                     </div>
-                  </div>
-                )}
+                  }
+                />
 
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
@@ -158,21 +157,9 @@ export default function ProjectsPage() {
                     {project.description}
                   </p>
 
-                  {project.goal && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Funding Progress</span>
-                        <span className="font-semibold">
-                          ${project.raised?.toLocaleString() || 0} / ${project.goal.toLocaleString()}
-                        </span>
-                      </div>
-                      <Progress 
-                        value={calculateProgress(project.raised || 0, project.goal)} 
-                        className="h-2"
-                        data-testid={`progress-${project.id}`}
-                      />
-                    </div>
-                  )}
+                  {project.goal ? (
+                    <FundingProgress project={project} percent={calculateProgress(project.raised || 0, project.goal)} />
+                  ) : null}
 
                   {project.volunteersNeeded && (
                     <div className="flex items-center justify-between text-sm">
@@ -224,17 +211,27 @@ export default function ProjectsPage() {
                     >
                       Volunteer
                     </Button>
-                    {project.goal && (
-                      <Button 
-                        variant="outline" 
-                        className="flex-1" 
+                    {project.goal ? (
+                      <Button
+                        variant="outline"
+                        className="flex-1"
                         size="sm"
+                        asChild={!!project.contactEmail}
                         data-testid={`button-donate-${project.id}`}
                       >
-                        <Heart className="mr-2 h-4 w-4" />
-                        Donate
+                        {project.contactEmail ? (
+                          <a href={`mailto:${project.contactEmail}?subject=${encodeURIComponent(`Donation for ${project.title}`)}`}>
+                            <Heart className="mr-2 h-4 w-4" />
+                            Donate
+                          </a>
+                        ) : (
+                          <>
+                            <Heart className="mr-2 h-4 w-4" />
+                            Donate
+                          </>
+                        )}
                       </Button>
-                    )}
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>
@@ -242,6 +239,38 @@ export default function ProjectsPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Cover image first, then the gallery, without duplicates. */
+function projectPhotos(project: Project): string[] {
+  const all = [project.imageUrl, ...((project.images as string[] | null) ?? [])].filter(Boolean) as string[];
+  return Array.from(new Set(all));
+}
+
+function FundingProgress({ project, percent }: { project: Project; percent: number }) {
+  const raised = project.raised || 0;
+  const goal = project.goal || 0;
+  const monthly = project.fundingPeriod === "monthly";
+  const month = new Date().toLocaleDateString("en-US", { month: "long", timeZone: "America/Chicago" });
+  const remaining = Math.max(goal - raised, 0);
+
+  return (
+    <div className="space-y-2 rounded-lg bg-muted/50 p-3" data-testid={`funding-${project.id}`}>
+      <div className="flex justify-between items-baseline text-sm gap-2">
+        <span className="text-muted-foreground">{monthly ? `Monthly support · ${month}` : "Funding Progress"}</span>
+        <span className="font-semibold whitespace-nowrap">
+          ${raised.toLocaleString()} / ${goal.toLocaleString()}
+          {monthly && <span className="font-normal text-muted-foreground">/mo</span>}
+        </span>
+      </div>
+      <Progress value={percent} className="h-2" data-testid={`progress-${project.id}`} />
+      <p className="text-xs text-muted-foreground">
+        {remaining > 0
+          ? `$${remaining.toLocaleString()} still needed${monthly ? " this month" : ""}`
+          : `Goal reached${monthly ? " this month" : ""} — thank you!`}
+      </p>
     </div>
   );
 }
