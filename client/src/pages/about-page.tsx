@@ -93,33 +93,41 @@ export default function AboutPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                We are rooted in historic Christian faith and hold to core biblical principles that unite believers across denominations.
+                We believe the Gospel is a simple message: take God at His word and obey His instructions.
               </p>
               <div className="space-y-2">
                 <h4 className="font-semibold text-foreground">Core Beliefs:</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start">
                     <Cross className="text-accent mr-2 h-4 w-4 shrink-0 mt-0.5" />
-                    <span>The Bible as God's inspired Word</span>
+                    <span>One true God: the Father, Jesus Christ the Son, and the Holy Spirit</span>
                   </li>
                   <li className="flex items-start">
                     <Cross className="text-accent mr-2 h-4 w-4 shrink-0 mt-0.5" />
-                    <span>Salvation through faith in Jesus Christ</span>
+                    <span>Salvation by grace through belief, repentance, obedience, and total commitment to Jesus</span>
                   </li>
                   <li className="flex items-start">
                     <Cross className="text-accent mr-2 h-4 w-4 shrink-0 mt-0.5" />
-                    <span>The Trinity: Father, Son, and Holy Spirit</span>
+                    <span>Water baptism by immersion and the baptism of the Holy Spirit</span>
                   </li>
                   <li className="flex items-start">
                     <Cross className="text-accent mr-2 h-4 w-4 shrink-0 mt-0.5" />
-                    <span>The Church as the body of Christ</span>
+                    <span>The gifts of the Spirit and the five-fold ministries at work in the Church today</span>
                   </li>
                   <li className="flex items-start">
                     <Cross className="text-accent mr-2 h-4 w-4 shrink-0 mt-0.5" />
-                    <span>Christ's return and eternal life</span>
+                    <span>Childlike simplicity: taking God at His word and obeying His instructions</span>
                   </li>
                 </ul>
               </div>
+              <Button
+                className="w-full"
+                onClick={() => setLocation("/statement-of-faith")}
+                data-testid="button-statement-of-faith"
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                Read Our Statement of Faith
+              </Button>
               <Button 
                 variant="outline" 
                 className="w-full"

@@ -53,6 +53,7 @@ export default function NavigationHeader() {
     { label: "Courses", path: "/courses" },
     { label: "Fellowship", path: "/fellowship", requiresAuth: true },
     { label: "Projects", path: "/projects" },
+    { label: "Our Faith", path: "/statement-of-faith" },
     { label: "About", path: "/about" },
   ];
 
@@ -68,17 +69,17 @@ export default function NavigationHeader() {
               data-testid="button-home"
             >
               <Cross className="text-primary text-xl" />
-              <h1 className="text-xl font-semibold text-foreground">Fellowship Hub</h1>
+              <h1 className="text-xl font-semibold text-foreground whitespace-nowrap">Fellowship Hub</h1>
             </button>
           </div>
           
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden xl:flex items-center space-x-6 2xl:space-x-8">
             {navItems.map((item) => (
               <button
                 key={item.path}
                 onClick={() => handleNavigation(item.path)}
-                className={`transition-colors font-medium ${
+                className={`transition-colors font-medium whitespace-nowrap ${
                   item.requiresAuth && !user 
                     ? "text-muted-foreground cursor-not-allowed" 
                     : "text-foreground hover:text-primary"
@@ -94,7 +95,7 @@ export default function NavigationHeader() {
           {/* Auth Section */}
           <div className="flex items-center space-x-3">
             {!user && (
-              <Badge variant="secondary" className="hidden sm:flex items-center">
+              <Badge variant="secondary" className="hidden 2xl:flex items-center whitespace-nowrap">
                 <Eye className="mr-1 h-3 w-3" />
                 Guest Access
               </Badge>
@@ -180,7 +181,7 @@ export default function NavigationHeader() {
                 <Button
                   variant="ghost"
                   onClick={handleAuth}
-                  className="text-primary hover:text-primary/80"
+                  className="text-primary hover:text-primary/80 hidden sm:flex"
                   data-testid="button-sign-in"
                 >
                   <LogIn className="mr-2 h-4 w-4" />
@@ -191,7 +192,8 @@ export default function NavigationHeader() {
                   data-testid="button-join"
                 >
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Join Fellowship
+                  <span className="hidden sm:inline">Join Fellowship</span>
+                  <span className="sm:hidden">Join</span>
                 </Button>
               </div>
             )}
@@ -199,7 +201,7 @@ export default function NavigationHeader() {
             {/* Mobile menu button */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="md:hidden">
+                <Button variant="ghost" size="sm" className="xl:hidden">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>

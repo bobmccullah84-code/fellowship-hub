@@ -12,6 +12,7 @@ import TeachingsPage from "@/pages/teachings-page";
 import CoursesPage from "@/pages/courses-page";
 import ProjectsPage from "@/pages/projects-page";
 import AboutPage from "@/pages/about-page";
+import StatementOfFaithPage from "@/pages/statement-of-faith-page";
 import FellowshipPage from "@/pages/fellowship-page";
 import AdminPage from "@/pages/admin-page";
 import CourseDetailPage from "@/pages/course-detail-page";
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/courses" component={CoursesPage} />
       <Route path="/projects" component={ProjectsPage} />
       <Route path="/about" component={AboutPage} />
+      <Route path="/statement-of-faith" component={StatementOfFaithPage} />
       <Route path="/course/:id" component={CourseDetailPage} />
       <Route path="/course/:courseId/lesson/:lessonId" component={LessonViewerPage} />
       <Route path="/foundations-outline" component={FoundationsOutlinePage} />
